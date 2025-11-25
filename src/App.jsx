@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import emailjs from '@emailjs/browser'; // UNCOMMENT THIS FOR PRODUCTION
-import { Camera, Instagram, Mail, Menu, X, Star, Tv, TrendingUp, ArrowRight, CheckCircle, ChevronDown, Plus, Minus, Quote } from 'lucide-react';
+import { Analytics } from '@vercel/analytics/react'; // UNCOMMENT FOR PRODUCTION
+import emailjs from '@emailjs/browser'; // UNCOMMENT FOR PRODUCTION
+import { Camera, Instagram, Mail, Menu, X, Star, Tv, TrendingUp, ArrowRight, CheckCircle, ChevronDown, Plus, Minus, Quote, Lock, UploadCloud } from 'lucide-react';
 
-/* LUXIERIA STYLE - BRAND CONSTANTS 
-  Fonts: Playfair Display (Serif) for headings, Montserrat (Sans) for body
-  Colors: Black, White, Gold (#D4AF37)
-*/
+/* --- CONFIGURATION --- */
+const CASTING_ID = "LUX2025";  // The ID models must enter
+const CASTING_PIN = "9988";    // The PIN models must enter
+const CLOUDINARY_CLOUD_NAME = "dobrbqjwm"; // GET THIS FROM CLOUDINARY
+const CLOUDINARY_PRESET = "luxieria_uploads"; // GET THIS FROM CLOUDINARY
 
 const BRAND = {
   name: "LUXIERIA STYLE",
@@ -17,7 +19,147 @@ const BRAND = {
   }
 };
 
-// --- COMPONENTS ---
+// --- CASTING PORTAL COMPONENT (Private) ---
+const CastingPortal = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [inputId, setInputId] = useState('');
+  const [inputPin, setInputPin] = useState('');
+  const [uploadStatus, setUploadStatus] = useState('idle'); // idle, success
+  const [uploadedUrl, setUploadedUrl] = useState('');
+  const [error, setError] = useState('');
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    if (inputId === CASTING_ID && inputPin === CASTING_PIN) {
+      setIsAuthenticated(true);
+      setError('');
+    } else {
+      setError('Invalid Casting ID or PIN');
+    }
+  };
+
+  const openUploadWidget = () => {
+    if (!window.cloudinary) {
+      alert("Upload widget not loaded. Refresh the page.");
+      return;
+    }
+
+    const widget = window.cloudinary.createUploadWidget(
+      {
+        cloudName: CLOUDINARY_CLOUD_NAME,
+        uploadPreset: CLOUDINARY_PRESET,
+        sources: ['local', 'camera'], 
+        maxFiles: 50,
+        clientAllowedFormats: ['image', 'video'], 
+        styles: {
+          palette: {
+            window: "#000000",
+            windowBorder: "#D4AF37",
+            tabIcon: "#D4AF37",
+            menuIcons: "#D4AF37",
+            textDark: "#000000",
+            textLight: "#FFFFFF",
+            link: "#D4AF37",
+            action: "#D4AF37",
+            inactiveTabIcon: "#666666",
+            error: "#FF0000",
+            inProgress: "#D4AF37",
+            complete: "#20B832",
+            sourceBg: "#1a1a1a"
+          }
+        }
+      },
+      (error, result) => {
+        if (!error && result && result.event === "success") {
+          console.log('Done! Here is the file info: ', result.info);
+          setUploadedUrl(result.info.secure_url);
+          setUploadStatus('success');
+          
+          // UNCOMMENT THIS TO RECEIVE EMAIL NOTIFICATIONS FOR UPLOADS
+          emailjs.send('service_c7gu1qs', 'template_03aeqt5', {
+            casting_id: CASTING_ID,
+            file_url: result.info.secure_url,
+            file_type: result.info.format
+          }, 'RlOcxI1To8sBKyXlJ'); 
+          
+        }
+      }
+    );
+    widget.open();
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center px-4">
+        <div className="bg-zinc-900 p-8 md:p-12 border border-zinc-800 max-w-md w-full text-center">
+          <div className="mb-6 flex justify-center text-yellow-600">
+            <Lock size={48} />
+          </div>
+          <h2 className="font-serif text-3xl text-white mb-2">Private Portal</h2>
+          <p className="text-gray-400 text-sm mb-8">Restricted access for casting candidates only.</p>
+          
+          <form onSubmit={handleLogin} className="space-y-4">
+            <input 
+              type="text" 
+              placeholder="Casting ID"
+              value={inputId}
+              onChange={(e) => setInputId(e.target.value)}
+              className="w-full bg-black border border-zinc-700 p-4 text-white text-center tracking-widest focus:border-yellow-600 outline-none uppercase"
+            />
+            <input 
+              type="password" 
+              placeholder="PIN"
+              value={inputPin}
+              onChange={(e) => setInputPin(e.target.value)}
+              className="w-full bg-black border border-zinc-700 p-4 text-white text-center tracking-widest focus:border-yellow-600 outline-none"
+            />
+            {error && <p className="text-red-500 text-xs">{error}</p>}
+            <button className="w-full bg-yellow-600 text-black font-bold py-4 hover:bg-white transition-colors uppercase tracking-widest text-xs">
+              Access Portal
+            </button>
+          </form>
+          <a href="/" className="block mt-6 text-zinc-500 text-xs hover:text-white">← Return to Website</a>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-white flex items-center justify-center px-4">
+      <div className="max-w-lg w-full text-center">
+        <h2 className="font-serif text-3xl md:text-4xl mb-4">Upload Materials</h2>
+        <p className="text-gray-500 mb-10">Please upload your digitals or casting tape below. Video files may take a moment to process.</p>
+        
+        {uploadStatus === 'success' ? (
+          <div className="bg-green-50 border border-green-200 p-8 rounded-lg">
+            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
+              <CheckCircle className="h-8 w-8 text-green-600" />
+            </div>
+            <h3 className="font-serif text-2xl text-green-800 mb-2">Upload Complete</h3>
+            <p className="text-green-700 text-sm break-all">File Reference: {uploadedUrl.slice(-10)}</p>
+            <p className="text-gray-500 text-xs mt-4">The casting team has been notified.</p>
+            <button onClick={() => setUploadStatus('idle')} className="mt-6 text-xs uppercase underline font-bold">Upload another file</button>
+          </div>
+        ) : (
+          <button 
+            onClick={openUploadWidget}
+            className="group w-full border-2 border-dashed border-gray-300 p-12 hover:border-yellow-600 hover:bg-yellow-50 transition-all cursor-pointer flex flex-col items-center"
+          >
+            <UploadCloud size={64} className="text-gray-300 group-hover:text-yellow-600 mb-4 transition-colors" />
+            <span className="font-serif text-xl text-gray-900 mb-2">Click to Upload</span>
+            <span className="text-xs text-gray-500 uppercase tracking-widest">Images or Video (Max 50MB)</span>
+          </button>
+        )}
+        
+        <div className="mt-12 pt-8 border-t border-gray-100">
+           <a href="/" className="text-xs uppercase tracking-widest text-gray-400 hover:text-black">Log Out</a>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- PUBLIC WEBSITE COMPONENTS ---
 
 const Navigation = ({ activeSection, scrollToSection, mobileMenuOpen, setMobileMenuOpen }) => {
   const navLinks = [
@@ -93,7 +235,6 @@ const Navigation = ({ activeSection, scrollToSection, mobileMenuOpen, setMobileM
 const Hero = ({ scrollToSection }) => {
   return (
     <section id="home" className="relative h-screen min-h-[600px] flex items-center justify-center overflow-hidden bg-black">
-      {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0">
         <img 
           src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=2070&auto=format&fit=crop" 
@@ -103,7 +244,6 @@ const Hero = ({ scrollToSection }) => {
         <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90"></div>
       </div>
 
-      {/* Content */}
       <div className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto mt-16">
         <h2 className="text-xs md:text-sm font-light tracking-[0.3em] uppercase mb-4 text-yellow-500 animate-fade-in-up">
           Modeling & Casting Agency
@@ -130,7 +270,6 @@ const Hero = ({ scrollToSection }) => {
         </div>
       </div>
 
-      {/* Scroll Indicator */}
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
         <ChevronDown className="text-white opacity-50" size={32} />
       </div>
@@ -151,7 +290,6 @@ const About = () => {
                 className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
               />
             </div>
-            {/* Decorative Element */}
             <div className="absolute -bottom-6 -right-6 w-48 h-48 bg-gray-50 -z-10 border border-gray-200"></div>
           </div>
           
@@ -381,7 +519,7 @@ const ApplicationForm = () => {
     e.preventDefault();
     setFormState('submitting');
 
-
+   
 
     
     emailjs.sendForm('service_c7gu1qs', 'template_xk0m9ad', form.current, 'RlOcxI1To8sBKyXlJ')
@@ -392,6 +530,7 @@ const ApplicationForm = () => {
           alert("There was an error submitting your application.");
           setFormState('idle');
       });
+    
   };
 
   return (
@@ -497,14 +636,7 @@ const Footer = () => {
             <p className="text-gray-400 text-sm max-w-sm mb-6 leading-relaxed">
               The premier destination for new face modeling and reality television casting. We bridge the gap between high fashion and pop culture.
             </p>
-            <div className="flex space-x-4">
-              <a href="#" className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center hover:bg-yellow-600 hover:text-white transition-all text-gray-400">
-                <Instagram size={18} />
-              </a>
-              <a href="#" className="w-10 h-10 rounded-full bg-zinc-900 flex items-center justify-center hover:bg-yellow-600 hover:text-white transition-all text-gray-400">
-                <Mail size={18} />
-              </a>
-            </div>
+            {/* Social Icons Removed */}
           </div>
           
           <div>
@@ -523,7 +655,6 @@ const Footer = () => {
               <li className="flex items-start">
                 <span className="text-yellow-600 mr-2">●</span> Miami, FL / Los Angeles, CA
               </li>
-              {/* Removed email as requested */}
               <li className="flex items-start">
                 <span className="text-yellow-600 mr-2">●</span> Mon-Fri: 9am - 6pm
               </li>
@@ -543,16 +674,38 @@ const Footer = () => {
   );
 };
 
+const MainSite = ({ activeSection, scrollToSection, mobileMenuOpen, setMobileMenuOpen }) => (
+  <>
+    <Navigation activeSection={activeSection} scrollToSection={scrollToSection} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
+    <main>
+      <Hero scrollToSection={scrollToSection} />
+      <About />
+      <Services />
+      <Talent />
+      <SuccessStories />
+      <ApplicationForm />
+    </main>
+    <Footer />
+  </>
+);
+
 const App = () => {
   const [activeSection, setActiveSection] = useState('home');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isPortal, setIsPortal] = useState(false);
 
-  // Add Google Fonts
   useEffect(() => {
+    // Add Google Fonts
     const link = document.createElement('link');
     link.href = 'https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap';
     link.rel = 'stylesheet';
     document.head.appendChild(link);
+
+    // Simple routing check
+    if (window.location.pathname === '/portal') {
+      setIsPortal(true);
+    }
+
     return () => document.head.removeChild(link);
   }, []);
 
@@ -564,12 +717,11 @@ const App = () => {
     }
   };
 
-  // Update active section on scroll
   useEffect(() => {
+    if (isPortal) return;
     const handleScroll = () => {
       const sections = ['home', 'about', 'services', 'talent', 'stories', 'apply'];
       const scrollPosition = window.scrollY + 200;
-
       for (const section of sections) {
         const element = document.getElementById(section);
         if (element && element.offsetTop <= scrollPosition && (element.offsetTop + element.offsetHeight) > scrollPosition) {
@@ -577,47 +729,31 @@ const App = () => {
         }
       }
     };
-
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [isPortal]);
 
   return (
     <div className="font-sans antialiased bg-white selection:bg-yellow-200 selection:text-black">
       <style>{`
-        :root {
-          --font-serif: 'Playfair Display', serif;
-          --font-sans: 'Montserrat', sans-serif;
-        }
-        .font-serif { font-family: var(--font-serif); }
-        .font-sans { font-family: var(--font-sans); }
-        
-        @keyframes fade-in-up {
-          0% { opacity: 0; transform: translateY(20px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in-up {
-          animation: fade-in-up 1s ease-out forwards;
-        }
+        :root { --font-serif: 'Playfair Display', serif; --font-sans: 'Montserrat', sans-serif; }
+        .font-serif { font-family: var(--font-serif); } .font-sans { font-family: var(--font-sans); }
+        @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in-up { animation: fade-in-up 1s ease-out forwards; }
       `}</style>
       
-      <Navigation 
-        activeSection={activeSection} 
-        scrollToSection={scrollToSection}
-        mobileMenuOpen={mobileMenuOpen}
-        setMobileMenuOpen={setMobileMenuOpen}
-      />
+      {isPortal ? (
+        <CastingPortal />
+      ) : (
+        <MainSite 
+          activeSection={activeSection} 
+          scrollToSection={scrollToSection} 
+          mobileMenuOpen={mobileMenuOpen} 
+          setMobileMenuOpen={setMobileMenuOpen} 
+        />
+      )}
       
-      <main>
-        <Hero scrollToSection={scrollToSection} />
-        <About />
-        <Services />
-        <Talent />
-        <SuccessStories />
-        <ApplicationForm />
-      </main>
-
-      <Footer />
+      {/* <Analytics /> */}
     </div>
   );
 };
