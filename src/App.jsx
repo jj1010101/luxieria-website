@@ -103,7 +103,7 @@ const CastingPortal = () => {
               type="text" 
               placeholder="Casting ID"
               value={inputId}
-              onChange={(e) => setInputId(e.target.value)}
+              onChange={(e) => setInputId(e.target.value.toUpperCase())}
               className="w-full bg-black border border-zinc-700 p-4 text-white text-center tracking-widest focus:border-yellow-600 outline-none uppercase"
             />
             <input 
