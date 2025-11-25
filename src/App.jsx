@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Analytics } from '@vercel/analytics/react'; // UNCOMMENT FOR PRODUCTION
 import emailjs from '@emailjs/browser'; // UNCOMMENT FOR PRODUCTION
-import { Camera, Instagram, Mail, Menu, X, Star, Tv, TrendingUp, ArrowRight, CheckCircle, ChevronDown, Plus, Minus, Quote, Lock, UploadCloud } from 'lucide-react';
+import { Camera, Instagram, Mail, Menu, X, Star, Tv, TrendingUp, ArrowRight, CheckCircle, ChevronDown, Plus, Minus, Quote, Lock, UploadCloud, Send } from 'lucide-react';
 
 /* --- CONFIGURATION --- */
-const CASTING_ID = "LUX2025";  // The ID models must enter
-const CASTING_PIN = "9988";    // The PIN models must enter
-const CLOUDINARY_CLOUD_NAME = "dobrbqjwm"; // GET THIS FROM CLOUDINARY
-const CLOUDINARY_PRESET = "luxieria_uploads"; // GET THIS FROM CLOUDINARY
+const CASTING_ID = "LUX2025";  
+const CASTING_PIN = "9988";    
+const CLOUDINARY_CLOUD_NAME = "dobrbqjwm"; 
+const CLOUDINARY_PRESET = "luxieria_uploads"; 
 
 const BRAND = {
   name: "LUXIERIA STYLE",
@@ -24,13 +24,15 @@ const CastingPortal = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [inputId, setInputId] = useState('');
   const [inputPin, setInputPin] = useState('');
-  const [uploadStatus, setUploadStatus] = useState('idle'); // idle, success
-  const [uploadedUrl, setUploadedUrl] = useState('');
+  
+  // State for managing the flow
+  const [uploadedFiles, setUploadedFiles] = useState([]); 
+  const [submissionStatus, setSubmissionStatus] = useState('idle'); // 'idle', 'uploading', 'sending', 'complete'
   const [error, setError] = useState('');
 
   const handleLogin = (e) => {
     e.preventDefault();
-    if (inputId === CASTING_ID && inputPin === CASTING_PIN) {
+    if (inputId.toUpperCase() === CASTING_ID && inputPin === CASTING_PIN) {
       setIsAuthenticated(true);
       setError('');
     } else {
@@ -71,21 +73,38 @@ const CastingPortal = () => {
       },
       (error, result) => {
         if (!error && result && result.event === "success") {
-          console.log('Done! Here is the file info: ', result.info);
-          setUploadedUrl(result.info.secure_url);
-          setUploadStatus('success');
-          
-          // UNCOMMENT THIS TO RECEIVE EMAIL NOTIFICATIONS FOR UPLOADS
-          emailjs.send('service_c7gu1qs', 'template_03aeqt5', {
-            casting_id: CASTING_ID,
-            file_url: result.info.secure_url,
-            file_type: result.info.format
-          }, 'RlOcxI1To8sBKyXlJ'); 
-          
+          // Add file to list, but DO NOT send email yet
+          setUploadedFiles(prev => [...prev, result.info]);
+          setSubmissionStatus('uploading'); 
         }
       }
     );
     widget.open();
+  };
+
+  const handleFinalSubmit = () => {
+    setSubmissionStatus('sending');
+
+    // 1. Create a string list of all URLs
+    const fileListString = uploadedFiles.map(f => `${f.original_filename} (${f.format}): ${f.secure_url}`).join('\n\n');
+
+    // 2. Send ONE email with the list
+   
+    emailjs.send('service_c7gu1qs', 'template_03aeqt5', {
+      casting_id: CASTING_ID,
+      file_list: fileListString, // Use {{file_list}} in your template
+    }, 'RlOcxI1To8sBKyXlJ')
+    .then(() => {
+       setSubmissionStatus('complete');
+    })
+    .catch((err) => {
+       console.error(err);
+       alert("Error sending notification. Please try again.");
+       setSubmissionStatus('uploading');
+    });
+    
+
+    
   };
 
   if (!isAuthenticated) {
@@ -127,28 +146,74 @@ const CastingPortal = () => {
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-4">
       <div className="max-w-lg w-full text-center">
-        <h2 className="font-serif text-3xl md:text-4xl mb-4">Upload Materials</h2>
-        <p className="text-gray-500 mb-10">Please upload your digitals or casting tape below. Video files may take a moment to process.</p>
         
-        {uploadStatus === 'success' ? (
-          <div className="bg-green-50 border border-green-200 p-8 rounded-lg">
-            <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4">
-              <CheckCircle className="h-8 w-8 text-green-600" />
+        {submissionStatus === 'complete' ? (
+          /* --- SUCCESS SCREEN --- */
+          <div className="bg-green-50 border border-green-200 p-8 rounded-lg text-center">
+            <div className="flex justify-center mb-6">
+              <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
+                <CheckCircle className="h-8 w-8 text-green-600" />
+              </div>
             </div>
-            <h3 className="font-serif text-2xl text-green-800 mb-2">Upload Complete</h3>
-            <p className="text-green-700 text-sm break-all">File Reference: {uploadedUrl.slice(-10)}</p>
-            <p className="text-gray-500 text-xs mt-4">The casting team has been notified.</p>
-            <button onClick={() => setUploadStatus('idle')} className="mt-6 text-xs uppercase underline font-bold">Upload another file</button>
+            <h3 className="font-serif text-2xl text-green-800 mb-2">Submission Sent</h3>
+            <p className="text-gray-500 text-sm mb-6">
+              We have received {uploadedFiles.length} file(s). The casting team has been notified via email.
+            </p>
+            <button 
+              onClick={() => {
+                setUploadedFiles([]);
+                setSubmissionStatus('idle');
+              }}
+              className="text-xs uppercase underline font-bold text-green-800"
+            >
+              Start New Submission
+            </button>
           </div>
         ) : (
-          <button 
-            onClick={openUploadWidget}
-            className="group w-full border-2 border-dashed border-gray-300 p-12 hover:border-yellow-600 hover:bg-yellow-50 transition-all cursor-pointer flex flex-col items-center"
-          >
-            <UploadCloud size={64} className="text-gray-300 group-hover:text-yellow-600 mb-4 transition-colors" />
-            <span className="font-serif text-xl text-gray-900 mb-2">Click to Upload</span>
-            <span className="text-xs text-gray-500 uppercase tracking-widest">Images or Video (Max 50MB)</span>
-          </button>
+          /* --- UPLOAD SCREEN --- */
+          <>
+            <h2 className="font-serif text-3xl md:text-4xl mb-4">Upload Materials</h2>
+            <p className="text-gray-500 mb-8">Upload your casting materials. Once all files are uploaded, click "Finish & Send" to notify the agency.</p>
+            
+            {/* File List Area */}
+            {uploadedFiles.length > 0 && (
+              <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-4 mb-6 text-left max-h-48 overflow-y-auto">
+                <h4 className="text-xs font-bold uppercase text-gray-400 mb-2">Files Ready to Send:</h4>
+                <ul className="space-y-2">
+                  {uploadedFiles.map((file, idx) => (
+                    <li key={idx} className="text-sm flex items-center text-gray-700 truncate">
+                      <CheckCircle size={14} className="text-green-500 mr-2 flex-shrink-0" />
+                      <span className="truncate">{file.original_filename}.{file.format}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <button 
+                onClick={openUploadWidget}
+                className="w-full border-2 border-dashed border-gray-300 p-6 hover:border-yellow-600 hover:bg-yellow-50 transition-all cursor-pointer flex items-center justify-center group"
+              >
+                <UploadCloud className="text-gray-400 group-hover:text-yellow-600 mr-3 transition-colors" />
+                <span className="text-sm font-bold uppercase tracking-widest text-gray-600 group-hover:text-black">
+                  {uploadedFiles.length > 0 ? "Add Another File" : "Select Files"}
+                </span>
+              </button>
+
+              {/* Only show Finish button if files exist */}
+              {uploadedFiles.length > 0 && (
+                <button 
+                  onClick={handleFinalSubmit}
+                  disabled={submissionStatus === 'sending'}
+                  className="w-full bg-black text-white py-4 uppercase tracking-widest text-xs font-bold hover:bg-zinc-800 transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submissionStatus === 'sending' ? 'Sending Notification...' : `Finish & Send (${uploadedFiles.length})`}
+                  {submissionStatus !== 'sending' && <Send size={14} className="ml-2" />}
+                </button>
+              )}
+            </div>
+          </>
         )}
         
         <div className="mt-12 pt-8 border-t border-gray-100">
