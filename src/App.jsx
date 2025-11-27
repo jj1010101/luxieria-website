@@ -169,7 +169,7 @@ const CastingPortal = () => {
           <>
             <div className="mb-12">
               <h1 className="text-5xl md:text-7xl font-black tracking-tighter uppercase mb-6 leading-[0.85]">Digital<br/>Submission</h1>
-              <p className="text-gray-600 font-medium max-w-lg border-l-4 border-black pl-6 py-2">Please upload high-resolution digitals and video introductions.</p>
+              <p className="text-gray-600 font-medium max-w-lg border-l-4 border-black pl-6 py-2">Please upload high-resolution images and videos.</p>
             </div>
 
             {uploadedFiles.length > 0 && (
