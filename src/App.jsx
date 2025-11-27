@@ -1,33 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Analytics } from '@vercel/analytics/react'; // UNCOMMENT FOR PRODUCTION
 import emailjs from '@emailjs/browser'; // UNCOMMENT FOR PRODUCTION
-import { Camera, Instagram, Mail, Menu, X, Star, Tv, TrendingUp, ArrowRight, CheckCircle, ChevronDown, Plus, Minus, Quote, Lock, UploadCloud, Send } from 'lucide-react';
+import { Instagram, Menu, X, ArrowRight, CheckCircle, ChevronDown, Globe, Shield, Zap, Lock, UploadCloud, Send, Play, FileText, Trash2 } from 'lucide-react';
 
 /* --- CONFIGURATION --- */
-const CASTING_ID = "LUX2025";  
-const CASTING_PIN = "9988";    
-const CLOUDINARY_CLOUD_NAME = "dobrbqjwm"; 
-const CLOUDINARY_PRESET = "luxieria_uploads"; 
+// Generated Random Credentials
+const CASTING_ID = "LUX-9B4K";
+const CASTING_PIN = "837192";
+const CLOUDINARY_CLOUD_NAME = "dobrbqjwm";
+const CLOUDINARY_PRESET = "luxieria_uploads";
 
-const BRAND = {
-  name: "LUXIERIA STYLE",
-  tagline: "Defining Modern Elegance",
-  colors: {
-    gold: "text-yellow-600",
-    bgGold: "bg-yellow-600",
-    borderGold: "border-yellow-600",
-  }
-};
-
-// --- CASTING PORTAL COMPONENT (Private) ---
+// --- CASTING PORTAL (Private - Multi File Batch) ---
 const CastingPortal = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [inputId, setInputId] = useState('');
   const [inputPin, setInputPin] = useState('');
-  
-  // State for managing the flow
   const [uploadedFiles, setUploadedFiles] = useState([]); 
-  const [submissionStatus, setSubmissionStatus] = useState('idle'); // 'idle', 'uploading', 'sending', 'complete'
+  const [submissionStatus, setSubmissionStatus] = useState('idle');
   const [error, setError] = useState('');
 
   const handleLogin = (e) => {
@@ -42,38 +31,36 @@ const CastingPortal = () => {
 
   const openUploadWidget = () => {
     if (!window.cloudinary) {
-      alert("Upload widget not loaded. Refresh the page.");
+      alert("Upload widget not loaded. Refresh page.");
       return;
     }
-
     const widget = window.cloudinary.createUploadWidget(
       {
         cloudName: CLOUDINARY_CLOUD_NAME,
         uploadPreset: CLOUDINARY_PRESET,
         sources: ['local', 'camera'], 
-        maxFiles: 50,
+        maxFiles: 100,
         clientAllowedFormats: ['image', 'video'], 
         styles: {
           palette: {
-            window: "#000000",
-            windowBorder: "#D4AF37",
-            tabIcon: "#D4AF37",
-            menuIcons: "#D4AF37",
+            window: "#ffffff",
+            sourceBg: "#f4f4f5",
+            windowBorder: "#000000",
+            tabIcon: "#000000",
+            inactiveTabIcon: "#555555",
+            menuIcons: "#000000",
+            link: "#000000",
+            action: "#000000",
+            inProgress: "#000000",
+            complete: "#000000",
+            error: "#cc0000",
             textDark: "#000000",
-            textLight: "#FFFFFF",
-            link: "#D4AF37",
-            action: "#D4AF37",
-            inactiveTabIcon: "#666666",
-            error: "#FF0000",
-            inProgress: "#D4AF37",
-            complete: "#20B832",
-            sourceBg: "#1a1a1a"
+            textLight: "#ffffff"
           }
         }
       },
       (error, result) => {
         if (!error && result && result.event === "success") {
-          // Add file to list, but DO NOT send email yet
           setUploadedFiles(prev => [...prev, result.info]);
           setSubmissionStatus('uploading'); 
         }
@@ -84,23 +71,19 @@ const CastingPortal = () => {
 
   const handleFinalSubmit = () => {
     setSubmissionStatus('sending');
-
-    // 1. Create a string list of all URLs
-    const fileListString = uploadedFiles.map(f => `${f.original_filename} (${f.format}): ${f.secure_url}`).join('\n\n');
-
-    // 2. Send ONE email with the list
-   
+    
+    
+    const fileListString = uploadedFiles.map(f => `${f.original_filename}: ${f.secure_url}`).join('\n\n');
+    
     emailjs.send('service_c7gu1qs', 'template_03aeqt5', {
       casting_id: CASTING_ID,
-      file_list: fileListString, // Use {{file_list}} in your template
+      file_list: fileListString, // Uses {{file_list}} in template
     }, 'RlOcxI1To8sBKyXlJ')
-    .then(() => {
-       setSubmissionStatus('complete');
-    })
+    .then(() => setSubmissionStatus('complete'))
     .catch((err) => {
        console.error(err);
-       alert("Error sending notification. Please try again.");
        setSubmissionStatus('uploading');
+       alert("Error sending notification.");
     });
     
 
@@ -109,464 +92,230 @@ const CastingPortal = () => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center px-4">
-        <div className="bg-zinc-900 p-8 md:p-12 border border-zinc-800 max-w-md w-full text-center">
-          <div className="mb-6 flex justify-center text-yellow-600">
-            <Lock size={48} />
+      <div className="min-h-screen bg-zinc-50 flex flex-col items-center justify-center px-6 font-sans">
+        <div className="max-w-md w-full bg-white border-2 border-black p-8 md:p-12 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+          <div className="flex flex-col items-center mb-10">
+            <div className="border-2 border-black p-3 mb-4">
+              <Lock className="w-6 h-6 text-black" />
+            </div>
+            <h2 className="text-3xl font-black tracking-tighter uppercase">Restricted Access</h2>
+            <div className="h-1 w-12 bg-black mt-4"></div>
           </div>
-          <h2 className="font-serif text-3xl text-white mb-2">Private Portal</h2>
-          <p className="text-gray-400 text-sm mb-8">Restricted access for casting candidates only.</p>
-          
-          <form onSubmit={handleLogin} className="space-y-4">
-            <input 
-              type="text" 
-              placeholder="Casting ID"
-              value={inputId}
-              onChange={(e) => setInputId(e.target.value.toUpperCase())}
-              className="w-full bg-black border border-zinc-700 p-4 text-white text-center tracking-widest focus:border-yellow-600 outline-none uppercase"
-            />
-            <input 
-              type="password" 
-              placeholder="PIN"
-              value={inputPin}
-              onChange={(e) => setInputPin(e.target.value)}
-              className="w-full bg-black border border-zinc-700 p-4 text-white text-center tracking-widest focus:border-yellow-600 outline-none"
-            />
-            {error && <p className="text-red-500 text-xs">{error}</p>}
-            <button className="w-full bg-yellow-600 text-black font-bold py-4 hover:bg-white transition-colors uppercase tracking-widest text-xs">
-              Access Portal
+          <form onSubmit={handleLogin} className="space-y-6" autoComplete="off">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest">Casting ID</label>
+              <input 
+                type="text" 
+                value={inputId} 
+                onChange={(e) => setInputId(e.target.value.toUpperCase())} 
+                className="w-full border-2 border-black p-4 text-center font-bold placeholder-gray-300 focus:outline-none focus:bg-zinc-50 uppercase tracking-widest text-lg" 
+                placeholder="LUX-XXXX" 
+                autoComplete="off"
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest">Secure PIN</label>
+              <input 
+                type="password" 
+                value={inputPin} 
+                onChange={(e) => setInputPin(e.target.value)} 
+                className="w-full border-2 border-black p-4 text-center font-bold placeholder-gray-300 focus:outline-none focus:bg-zinc-50 text-lg tracking-widest" 
+                placeholder="••••••" 
+                autoComplete="new-password"
+              />
+            </div>
+            {error && (<div className="bg-red-50 border border-red-200 p-3 text-center"><p className="text-red-600 text-xs font-bold uppercase">{error}</p></div>)}
+            <button className="w-full bg-black text-white h-16 uppercase tracking-[0.2em] font-black hover:bg-zinc-800 transition-all flex items-center justify-center group">
+              Access Portal <ArrowRight className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </button>
           </form>
-          <a href="/" className="block mt-6 text-zinc-500 text-xs hover:text-white">← Return to Website</a>
+          <div className="mt-8 pt-8 border-t border-zinc-100 text-center">
+            <a href="/" className="text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors">← Return to Main Site</a>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-4">
-      <div className="max-w-lg w-full text-center">
-        
+    <div className="min-h-screen bg-white font-sans flex flex-col">
+      <header className="border-b-2 border-black bg-white sticky top-0 z-20">
+        <div className="max-w-5xl mx-auto px-6 h-20 flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="font-black tracking-tighter text-xl">SECURE UPLOAD</span>
+          </div>
+          <div className="text-xs font-bold uppercase tracking-widest border border-black px-3 py-1">
+            ID: {CASTING_ID}
+          </div>
+        </div>
+      </header>
+
+      <div className="flex-1 max-w-3xl mx-auto w-full px-6 py-12 md:py-20">
         {submissionStatus === 'complete' ? (
-          /* --- SUCCESS SCREEN --- */
-          <div className="bg-green-50 border border-green-200 p-8 rounded-lg text-center">
-            <div className="flex justify-center mb-6">
-              <div className="h-16 w-16 rounded-full bg-green-100 flex items-center justify-center">
-                <CheckCircle className="h-8 w-8 text-green-600" />
-              </div>
+          <div className="bg-zinc-50 border-2 border-black p-12 text-center">
+            <div className="w-20 h-20 bg-black text-white mx-auto flex items-center justify-center mb-8">
+              <CheckCircle className="w-10 h-10" />
             </div>
-            <h3 className="font-serif text-2xl text-green-800 mb-2">Submission Sent</h3>
-            <p className="text-gray-500 text-sm mb-6">
-              We have received {uploadedFiles.length} file(s). The casting team has been notified via email.
+            <h2 className="text-4xl md:text-5xl font-black tracking-tighter uppercase mb-4">Upload Complete</h2>
+            <p className="text-gray-600 font-medium mb-8 max-w-md mx-auto">
+              Your digital assets have been successfully encrypted and transferred to our casting server.
             </p>
-            <button 
-              onClick={() => {
-                setUploadedFiles([]);
-                setSubmissionStatus('idle');
-              }}
-              className="text-xs uppercase underline font-bold text-green-800"
-            >
-              Start New Submission
+            <button onClick={() => { setUploadedFiles([]); setSubmissionStatus('idle'); }} className="text-xs font-black uppercase tracking-widest border-b-2 border-black pb-1 hover:text-zinc-600 hover:border-zinc-600 transition-colors">
+              Submit Additional Files
             </button>
           </div>
         ) : (
-          /* --- UPLOAD SCREEN --- */
           <>
-            <h2 className="font-serif text-3xl md:text-4xl mb-4">Upload Materials</h2>
-            <p className="text-gray-500 mb-8">Upload your casting materials. Once all files are uploaded, click "Finish & Send" to notify the agency.</p>
-            
-            {/* File List Area */}
+            <div className="mb-12">
+              <h1 className="text-5xl md:text-7xl font-black tracking-tighter uppercase mb-6 leading-[0.85]">Digital<br/>Submission</h1>
+              <p className="text-gray-600 font-medium max-w-lg border-l-4 border-black pl-6 py-2">Please upload high-resolution digitals and video introductions.</p>
+            </div>
+
             {uploadedFiles.length > 0 && (
-              <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-4 mb-6 text-left max-h-48 overflow-y-auto">
-                <h4 className="text-xs font-bold uppercase text-gray-400 mb-2">Files Ready to Send:</h4>
-                <ul className="space-y-2">
-                  {uploadedFiles.map((file, idx) => (
-                    <li key={idx} className="text-sm flex items-center text-gray-700 truncate">
-                      <CheckCircle size={14} className="text-green-500 mr-2 flex-shrink-0" />
-                      <span className="truncate">{file.original_filename}.{file.format}</span>
-                    </li>
+              <div className="mb-8 border-2 border-black">
+                <div className="bg-black text-white px-4 py-2 flex justify-between items-center">
+                  <span className="text-[10px] font-bold uppercase tracking-widest">Manifest</span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest">{uploadedFiles.length} Items</span>
+                </div>
+                <div className="divide-y-2 divide-black bg-white max-h-64 overflow-y-auto">
+                  {uploadedFiles.map((f, i) => (
+                    <div key={i} className="flex items-center justify-between p-4 hover:bg-zinc-50">
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <FileText className="w-4 h-4 flex-shrink-0" />
+                        <span className="text-sm font-bold truncate">{f.original_filename}</span>
+                      </div>
+                      <span className="text-[10px] font-bold uppercase bg-green-100 text-green-800 px-2 py-1">Ready</span>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
             )}
 
-            <div className="space-y-4">
-              <button 
-                onClick={openUploadWidget}
-                className="w-full border-2 border-dashed border-gray-300 p-6 hover:border-yellow-600 hover:bg-yellow-50 transition-all cursor-pointer flex items-center justify-center group"
-              >
-                <UploadCloud className="text-gray-400 group-hover:text-yellow-600 mr-3 transition-colors" />
-                <span className="text-sm font-bold uppercase tracking-widest text-gray-600 group-hover:text-black">
-                  {uploadedFiles.length > 0 ? "Add Another File" : "Select Files"}
-                </span>
+            <div className="grid gap-6">
+              <button onClick={openUploadWidget} className="group relative h-40 border-2 border-dashed border-black hover:bg-zinc-50 transition-all flex flex-col items-center justify-center overflow-hidden">
+                <div className="relative z-10 flex flex-col items-center">
+                  <UploadCloud className="w-8 h-8 mb-3 group-hover:scale-110 transition-transform duration-300" />
+                  <span className="text-sm font-black uppercase tracking-widest">Select Files to Upload</span>
+                  <span className="text-[10px] uppercase text-gray-500 mt-2">Images / Video • Max 50MB</span>
+                </div>
               </button>
-
-              {/* Only show Finish button if files exist */}
+              
               {uploadedFiles.length > 0 && (
-                <button 
-                  onClick={handleFinalSubmit}
-                  disabled={submissionStatus === 'sending'}
-                  className="w-full bg-black text-white py-4 uppercase tracking-widest text-xs font-bold hover:bg-zinc-800 transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {submissionStatus === 'sending' ? 'Sending Notification...' : `Finish & Send (${uploadedFiles.length})`}
-                  {submissionStatus !== 'sending' && <Send size={14} className="ml-2" />}
+                <button onClick={handleFinalSubmit} disabled={submissionStatus === 'sending'} className="w-full bg-black text-white h-20 uppercase tracking-[0.2em] font-black text-sm hover:bg-zinc-900 transition-all flex items-center justify-between px-8 group disabled:opacity-50 disabled:cursor-not-allowed">
+                  <span className="flex flex-col items-start">
+                    <span>{submissionStatus === 'sending' ? 'Encrypting...' : 'Finalize Submission'}</span>
+                    <span className="text-[10px] text-zinc-400 font-normal normal-case mt-1">Send to Casting Director</span>
+                  </span>
+                  <Send className="w-5 h-5 group-hover:translate-x-2 transition-transform duration-300" />
                 </button>
               )}
             </div>
           </>
         )}
-        
-        <div className="mt-12 pt-8 border-t border-gray-100">
-           <a href="/" className="text-xs uppercase tracking-widest text-gray-400 hover:text-black">Log Out</a>
-        </div>
+      </div>
+      <div className="mt-auto border-t border-gray-200 py-6 text-center">
+        <a href="/" className="text-[10px] font-bold uppercase tracking-widest text-gray-400 hover:text-black transition-colors">Log Out / Return Home</a>
       </div>
     </div>
   );
 };
 
-// --- PUBLIC WEBSITE COMPONENTS ---
+// --- MAIN SITE COMPONENTS ---
 
-const Navigation = ({ activeSection, scrollToSection, mobileMenuOpen, setMobileMenuOpen }) => {
-  const navLinks = [
-    { name: 'Home', id: 'home' },
-    { name: 'About', id: 'about' },
-    { name: 'Talent', id: 'talent' },
-    { name: 'Services', id: 'services' },
-    { name: 'Apply', id: 'apply' },
-  ];
-
-  return (
-    <nav className="fixed w-full z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 transition-all duration-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-20">
-          {/* Logo */}
-          <div className="flex-shrink-0 flex items-center cursor-pointer" onClick={() => scrollToSection('home')}>
-            <span className="font-serif text-2xl tracking-widest font-bold text-black">
-              LUXIERIA<span className={BRAND.colors.gold}>.</span>
-            </span>
-          </div>
-
-          {/* Desktop Menu */}
-          <div className="hidden md:flex space-x-8 items-center">
-            {navLinks.map((link) => (
-              <button
-                key={link.name}
-                onClick={() => scrollToSection(link.id)}
-                className={`text-xs uppercase tracking-widest font-medium transition-colors hover:text-yellow-600 ${
-                  activeSection === link.id ? 'text-black' : 'text-gray-500'
-                }`}
-              >
-                {link.name}
-              </button>
-            ))}
-            <button 
-              onClick={() => scrollToSection('apply')}
-              className="bg-black text-white px-6 py-2 text-xs uppercase tracking-widest hover:bg-zinc-800 transition-all"
-            >
-              Cast Me
-            </button>
-          </div>
-
-          {/* Mobile Menu Button */}
-          <div className="md:hidden flex items-center">
-            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-black p-2">
-              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </div>
-        </div>
+const Navbar = ({ mobileMenuOpen, setMobileMenuOpen }) => (
+  <nav className="fixed w-full z-50 bg-white/90 backdrop-blur-sm border-b border-gray-100">
+    <div className="max-w-[1800px] mx-auto px-6 h-20 flex justify-between items-center">
+      <a href="#" className="text-2xl font-black tracking-tighter">LUXIERIA<span className="text-zinc-400">.</span></a>
+      <div className="hidden md:flex gap-8 items-center">
+        <a href="#agency" className="text-xs font-bold uppercase tracking-widest hover:text-gray-500 transition-colors">Agency</a>
+        <a href="#talent" className="text-xs font-bold uppercase tracking-widest hover:text-gray-500 transition-colors">Board</a>
+        <a href="#apply" className="bg-black text-white px-6 py-3 text-xs font-bold uppercase tracking-widest hover:bg-zinc-800">Apply</a>
       </div>
-
-      {/* Mobile Menu Overlay */}
-      {mobileMenuOpen && (
-        <div className="md:hidden absolute top-20 left-0 w-full bg-white border-b border-gray-100 py-4 px-4 flex flex-col space-y-4 shadow-xl">
-          {navLinks.map((link) => (
-            <button
-              key={link.name}
-              onClick={() => {
-                scrollToSection(link.id);
-                setMobileMenuOpen(false);
-              }}
-              className="text-left text-sm uppercase tracking-widest font-medium text-gray-800 py-2 border-b border-gray-50"
-            >
-              {link.name}
-            </button>
-          ))}
-        </div>
-      )}
-    </nav>
-  );
-};
-
-const Hero = ({ scrollToSection }) => {
-  return (
-    <section id="home" className="relative h-screen min-h-[600px] flex items-center justify-center overflow-hidden bg-black">
-      <div className="absolute inset-0 z-0">
-        <img 
-          src="https://images.unsplash.com/photo-1469334031218-e382a71b716b?q=80&w=2070&auto=format&fit=crop" 
-          alt="High Fashion Model" 
-          className="w-full h-full object-cover opacity-60"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90"></div>
+      <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden"><Menu /></button>
+    </div>
+    {mobileMenuOpen && (
+      <div className="absolute top-20 left-0 w-full bg-white border-b border-gray-200 p-6 flex flex-col gap-4 md:hidden">
+        <a href="#agency" className="text-lg font-bold uppercase" onClick={() => setMobileMenuOpen(false)}>Agency</a>
+        <a href="#talent" className="text-lg font-bold uppercase" onClick={() => setMobileMenuOpen(false)}>Talent Board</a>
+        <a href="#apply" className="text-lg font-bold uppercase text-red-600" onClick={() => setMobileMenuOpen(false)}>Apply Now</a>
       </div>
+    )}
+  </nav>
+);
 
-      <div className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto mt-16">
-        <h2 className="text-xs md:text-sm font-light tracking-[0.3em] uppercase mb-4 text-yellow-500 animate-fade-in-up">
-          Modeling & Casting Agency
-        </h2>
-        <h1 className="font-serif text-5xl md:text-7xl lg:text-8xl mb-6 tracking-tight leading-tight">
-          The New Era of <br/><span className="italic text-gray-300">Stardom</span>
-        </h1>
-        <p className="text-gray-300 text-sm md:text-base max-w-lg mx-auto mb-10 leading-relaxed font-light">
-          We discover the faces of tomorrow for high-end fashion, swimwear, and iconic reality television.
-        </p>
-        <div className="flex flex-col sm:flex-row justify-center gap-4">
-          <button 
-            onClick={() => scrollToSection('apply')}
-            className="bg-white text-black px-8 py-3 text-xs uppercase tracking-widest font-bold hover:bg-gray-200 transition-all transform hover:scale-105"
-          >
-            Apply Now
-          </button>
-          <button 
-            onClick={() => scrollToSection('about')}
-            className="border border-white text-white px-8 py-3 text-xs uppercase tracking-widest font-bold hover:bg-white hover:text-black transition-all"
-          >
-            Discover More
-          </button>
-        </div>
+const Hero = () => (
+  <section className="relative min-h-screen pt-20 flex flex-col justify-between">
+    <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 bg-gradient-to-b from-white/50 via-transparent to-white z-10"></div>
+      <img src="https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2070&auto=format&fit=crop" className="w-full h-full object-cover grayscale opacity-90" alt="Editorial" />
+    </div>
+    <div className="relative z-20 px-6 max-w-[1800px] mx-auto w-full pt-20 md:pt-32">
+      <div className="max-w-4xl">
+        <p className="text-xs md:text-sm font-bold uppercase tracking-[0.4em] mb-6 bg-black text-white inline-block px-2 py-1">Now Scouting 2026</p>
+        <h1 className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter leading-[0.9] mb-8">THE NEW<br/>FACE OF<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-black to-zinc-500">REALITY.</span></h1>
+        <p className="text-sm md:text-base font-medium max-w-lg leading-relaxed text-gray-900 bg-white/80 p-4 backdrop-blur-sm">Luxieria is a premier management agency bridging the gap between high-fashion editorial and major reality television formats.</p>
       </div>
+    </div>
+    <div className="relative z-20 bg-black text-white overflow-hidden py-4 border-y border-zinc-800">
+      <div className="animate-marquee whitespace-nowrap flex gap-12 items-center">
+        {[1,2,3,4,5].map(i => (
+          <React.Fragment key={i}>
+            <span className="text-xs font-bold uppercase tracking-widest">White Fox Boutique</span><span className="text-zinc-600 text-[10px]">●</span>
+            <span className="text-xs font-bold uppercase tracking-widest">Oh Polly</span><span className="text-zinc-600 text-[10px]">●</span>
+            <span className="text-xs font-bold uppercase tracking-widest">Jacquemus</span><span className="text-zinc-600 text-[10px]">●</span>
+            <span className="text-xs font-bold uppercase tracking-widest">Frankies Bikinis</span><span className="text-zinc-600 text-[10px]">●</span>
+            <span className="text-xs font-bold uppercase tracking-widest">Blackbough Swim</span><span className="text-zinc-600 text-[10px]">●</span>
+            <span className="text-xs font-bold uppercase tracking-widest">Kulani Kinis</span><span className="text-zinc-600 text-[10px]">●</span>
+            <span className="text-xs font-bold uppercase tracking-widest">Triangl</span><span className="text-zinc-600 text-[10px]">●</span>
 
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-        <ChevronDown className="text-white opacity-50" size={32} />
+
+
+          </React.Fragment>
+        ))}
       </div>
-    </section>
-  );
-};
+    </div>
+  </section>
+);
 
-const About = () => {
-  return (
-    <section id="about" className="py-24 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          <div className="relative">
-            <div className="aspect-[3/4] overflow-hidden bg-gray-100">
-              <img 
-                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=1964&auto=format&fit=crop" 
-                alt="Model Close up" 
-                className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700"
-              />
-            </div>
-            <div className="absolute -bottom-6 -right-6 w-48 h-48 bg-gray-50 -z-10 border border-gray-200"></div>
-          </div>
-          
-          <div>
-            <span className={`block text-xs font-bold uppercase tracking-widest mb-4 ${BRAND.colors.gold}`}>
-              Who We Are
-            </span>
-            <h2 className="font-serif text-4xl md:text-5xl text-black mb-8 leading-tight">
-              Where Elegance Meets <br/> <span className="italic">Opportunity.</span>
-            </h2>
-            <div className="space-y-6 text-gray-600 font-light leading-relaxed">
-              <p>
-                Luxieria Style is more than a modeling agency; we are a gateway to the global stage. Based on a foundation of inclusivity and high-fashion aesthetics, we specialize in scouting fresh talent for commercial print, runway, and swimsuit editorials.
-              </p>
-              <p>
-                Beyond the lens, we are a premier casting partner for some of television's most watched reality formats. From the villas of <strong className="text-black font-medium">Love Island</strong> to the pods of <strong className="text-black font-medium">Love is Blind</strong>, our talent roster is curated for personality, presence, and star power.
-              </p>
-            </div>
-            
-            <div className="mt-10 grid grid-cols-2 gap-8">
-              <div>
-                <h4 className="font-serif text-3xl text-black">500+</h4>
-                <p className="text-xs uppercase tracking-widest text-gray-500 mt-2">Placements</p>
-              </div>
-              <div>
-                <h4 className="font-serif text-3xl text-black">50+</h4>
-                <p className="text-xs uppercase tracking-widest text-gray-500 mt-2">Brand Partners</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-};
+const AgencyMetrics = () => (
+  <section id="agency" className="py-20 border-b border-gray-100">
+    <div className="max-w-[1800px] mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-12">
+      <div className="space-y-4"><Globe className="w-8 h-8 text-black" /><h3 className="text-xl font-bold uppercase tracking-tight">Global Placement</h3><p className="text-sm text-gray-500 leading-relaxed">Our talent is cast globally, from the villas of Mallorca to the runways of Miami Swim Week. We handle visa logistics and travel management.</p></div>
+      <div className="space-y-4"><Shield className="w-8 h-8 text-black" /><h3 className="text-xl font-bold uppercase tracking-tight">Career Protection</h3><p className="text-sm text-gray-500 leading-relaxed">We are not just a booking platform. We manage contracts, negotiate rates, and ensure safety standards on every set and production.</p></div>
+      <div className="space-y-4"><Zap className="w-8 h-8 text-black" /><h3 className="text-xl font-bold uppercase tracking-tight">Digital Development</h3><p className="text-sm text-gray-500 leading-relaxed">Transitioning from model to influencer. Our digital team builds your personal brand to ensure longevity beyond the show.</p></div>
+    </div>
+  </section>
+);
 
-const Services = () => {
-  const services = [
-    {
-      icon: <Camera size={32} />,
-      title: "Fashion & Editorial",
-      desc: "Representing diverse faces for high-end fashion, commercial catalogs, and runway shows. We focus on swimsuit and streetwear campaigns.",
-      image: "https://images.unsplash.com/photo-1500917293891-ef795e70e1f6?q=80&w=2070&auto=format&fit=crop"
-    },
-    {
-      icon: <Tv size={32} />,
-      title: "Reality TV Casting",
-      desc: "Direct casting pipelines to major networks. We prepare and pitch personalities for shows like Love Island, The Bachelor, and Love is Blind.",
-      image: "https://images.unsplash.com/photo-1533488765986-dfa2a9939acd?q=80&w=1974&auto=format&fit=crop"
-    },
-    {
-      icon: <TrendingUp size={32} />,
-      title: "Influencer Management",
-      desc: "Building personal brands. We help models transition into full-time influencers with strategy, partnerships, and media training.",
-      image: "https://images.unsplash.com/photo-1611162617474-5b21e879e113?q=80&w=1974&auto=format&fit=crop"
-    }
-  ];
-
-  return (
-    <section id="services" className="py-24 bg-zinc-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <span className={`text-xs font-bold uppercase tracking-widest ${BRAND.colors.gold}`}>Our Expertise</span>
-          <h2 className="font-serif text-3xl md:text-4xl mt-3 text-black">Curating Careers</h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {services.map((service, idx) => (
-            <div key={idx} className="group bg-white p-6 shadow-sm hover:shadow-xl transition-shadow duration-300">
-              <div className="h-48 mb-6 overflow-hidden">
-                <img src={service.image} alt={service.title} className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" />
-              </div>
-              <div className={`mb-4 ${BRAND.colors.gold}`}>{service.icon}</div>
-              <h3 className="font-serif text-xl mb-3 text-black">{service.title}</h3>
-              <p className="text-gray-500 text-sm leading-relaxed mb-6">{service.desc}</p>
-              <a href="#apply" className="inline-flex items-center text-xs uppercase font-bold tracking-widest hover:text-yellow-600 transition-colors">
-                Apply for this <ArrowRight size={14} className="ml-2" />
-              </a>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-const Talent = () => {
-  const [showAll, setShowAll] = useState(false);
-
-  // Expanded roster data
+const TalentBoard = () => {
   const models = [
-    { name: "Sienna M.", height: "5'9", img: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?q=80&w=1887&auto=format&fit=crop", tags: ["Editorial", "Swim"] },
-    { name: "Marcus J.", height: "6'2", img: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=1887&auto=format&fit=crop", tags: ["Commercial", "TV"] },
-    { name: "Elena R.", height: "5'10", img: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=1964&auto=format&fit=crop", tags: ["Runway", "Love Island"] },
-    { name: "David K.", height: "6'1", img: "https://images.unsplash.com/photo-1480455624313-e29b44bbfde1?q=80&w=2070&auto=format&fit=crop", tags: ["Fitness", "Print"] },
-    { name: "Zara B.", height: "5'8", img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1887&auto=format&fit=crop", tags: ["Lifestyle", "Influencer"] },
-    { name: "Leo T.", height: "6'0", img: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=1887&auto=format&fit=crop", tags: ["Streetwear", "Acting"] },
-    { name: "Amara L.", height: "5'11", img: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=1888&auto=format&fit=crop", tags: ["High Fashion", "Runway"] },
-    { name: "Julian P.", height: "6'3", img: "https://images.unsplash.com/photo-1504257432389-52343af06ae3?q=80&w=1887&auto=format&fit=crop", tags: ["Suiting", "Catalog"] }
+    { src: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=1964&auto=format&fit=crop", name: "ELENA R.", height: "5'10\"", cast: "Vogue Italia • Editorial" },
+    { src: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?q=80&w=1887&auto=format&fit=crop", name: "SIENNA M.", height: "5'9\"", cast: "Miami Swim Week • Oh Polly" },
+    { src: "https://images.unsplash.com/photo-1500917293891-ef795e70e1f6?q=80&w=2070&auto=format&fit=crop", name: "EMMA K.", height: "5'11\"", cast: "Jacquemus • Summer 2025" },
+    { src: "https://images.unsplash.com/photo-1616002411355-49593fd89721?q=80&w=1964&auto=format&fit=crop", name: "JASMINE C.", height: "5'8\"", cast: "Revolve • Global Campaign" }
   ];
-
-  const displayedModels = showAll ? models : models.slice(0, 4);
-
   return (
-    <section id="talent" className="py-24 bg-black text-white transition-all duration-500">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-12">
-          <div>
-            <span className={`text-xs font-bold uppercase tracking-widest ${BRAND.colors.gold}`}>Our Roster</span>
-            <h2 className="font-serif text-3xl md:text-4xl mt-3">Featured Talent</h2>
+    <section id="talent" className="border-b border-black bg-white">
+      <div className="max-w-[1800px] mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 border-b border-black">
+          <div className="lg:col-span-8 p-12 md:p-24 border-b lg:border-b-0 lg:border-r border-black">
+            <span className="block text-xs font-bold uppercase tracking-widest mb-4 text-gray-500">Selected Faces</span>
+            <h2 className="text-7xl md:text-9xl font-black tracking-tighter leading-[0.85] uppercase">Main<br/>Board</h2>
           </div>
-          
-          <button 
-            onClick={() => setShowAll(!showAll)}
-            className="hidden md:flex items-center text-xs uppercase tracking-widest border-b border-white pb-1 hover:text-yellow-500 hover:border-yellow-500 transition-all group"
-          >
-            {showAll ? (
-              <>
-                View Less <Minus size={14} className="ml-2 group-hover:rotate-180 transition-transform" />
-              </>
-            ) : (
-              <>
-                View All Models <Plus size={14} className="ml-2 group-hover:rotate-90 transition-transform" />
-              </>
-            )}
-          </button>
+          <div className="lg:col-span-4 p-12 flex flex-col justify-end items-start bg-zinc-50">
+            <p className="font-serif text-2xl leading-tight mb-8">"Luxieria represents the new standard of beauty—effortless, diverse, and unapologetically bold."</p>
+          </div>
         </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in-up">
-          {displayedModels.map((model, idx) => (
-            <div key={idx} className="group relative cursor-pointer">
-              <div className="aspect-[3/4] overflow-hidden bg-zinc-900">
-                <img 
-                  src={model.img} 
-                  alt={model.name} 
-                  className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500 transform group-hover:scale-105"
-                />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
+          {models.map((model, i) => (
+            <div key={i} className="group relative border-r border-b border-black border-collapse last:border-r-0 lg:last:border-r-0">
+              <div className="aspect-[3/4] overflow-hidden relative border-b border-black">
+                <img src={model.src} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" alt={model.name} />
+                <div className="absolute top-4 left-4 bg-black text-white px-3 py-1 text-[10px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity duration-300">{model.cast}</div>
               </div>
-              <div className="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black via-black/70 to-transparent opacity-100 md:opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-2 group-hover:translate-y-0">
-                <h3 className="font-serif text-lg text-white">{model.name}</h3>
-                <p className="text-xs text-gray-300 uppercase tracking-wider">{model.height} • {model.tags.join(" / ")}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-        
-        {/* Mobile Button */}
-        <div className="mt-8 text-center md:hidden">
-           <button 
-             onClick={() => setShowAll(!showAll)}
-             className="text-xs uppercase tracking-widest border-b border-white pb-1 inline-flex items-center"
-           >
-            {showAll ? "View Less" : "View All Models"}
-            {showAll ? <Minus size={14} className="ml-2" /> : <Plus size={14} className="ml-2" />}
-          </button>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-const SuccessStories = () => {
-  const stories = [
-    {
-      name: "Bella Rivera",
-      age: "21",
-      result: "Cast on Love Island USA",
-      quote: "I was just posting selfies on Instagram when Luxieria DM'd me. They coached me through the entire casting tape process. Three months later, I was flying to the villa!",
-      img: "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=1887&auto=format&fit=crop"
-    },
-    {
-      name: "Chloe Davis",
-      age: "19",
-      result: "Campaign for Oh Polly",
-      quote: "I'm under 5'7 so I thought I couldn't model. Luxieria saw my potential for commercial swim and lifestyle. Booking my first global campaign was a dream come true.",
-      img: "https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=1887&auto=format&fit=crop"
-    },
-    {
-      name: "Jasmine Chen",
-      age: "22",
-      result: "Full-Time Influencer",
-      quote: "Transitioning from a student to a full-time creator was scary. The agency helped me negotiate brand deals I didn't even know I could get.",
-      img: "https://images.unsplash.com/photo-1616002411355-49593fd89721?q=80&w=1964&auto=format&fit=crop"
-    }
-  ];
-
-  return (
-    <section id="stories" className="py-24 bg-zinc-50 border-t border-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <span className={`text-xs font-bold uppercase tracking-widest ${BRAND.colors.gold}`}>Real Results</span>
-          <h2 className="font-serif text-3xl md:text-4xl mt-3 text-black">Success Stories</h2>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {stories.map((story, idx) => (
-            <div key={idx} className="bg-white p-8 shadow-sm hover:shadow-md transition-shadow">
-              <div className="flex items-center mb-6">
-                <div className="h-16 w-16 rounded-full overflow-hidden mr-4 border-2 border-yellow-600/20">
-                  <img src={story.img} alt={story.name} className="w-full h-full object-cover" />
-                </div>
-                <div>
-                  <h4 className="font-serif text-lg text-black">{story.name}</h4>
-                  <p className="text-xs text-yellow-600 uppercase tracking-wider font-bold">{story.result}</p>
-                </div>
-              </div>
-              <Quote className="text-gray-200 mb-4 h-8 w-8" />
-              <p className="text-gray-600 text-sm leading-relaxed italic mb-4">
-                "{story.quote}"
-              </p>
-              <div className="text-xs text-gray-400 font-medium">
-                — Age {story.age}
+              <div className="p-6 bg-white group-hover:bg-zinc-50 transition-colors">
+                <div className="flex justify-between items-center"><h3 className="text-xl font-black tracking-tighter uppercase">{model.name}</h3><span className="text-xs font-bold text-gray-400">{model.height}</span></div>
               </div>
             </div>
           ))}
@@ -576,249 +325,153 @@ const SuccessStories = () => {
   );
 };
 
-const ApplicationForm = () => {
-  const [formState, setFormState] = useState('idle'); // idle, submitting, success
+const Application = () => {
+  const [state, setState] = useState('idle');
   const form = useRef();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setFormState('submitting');
-
-   
-
+    setState('submitting');
     
+
     emailjs.sendForm('service_c7gu1qs', 'template_xk0m9ad', form.current, 'RlOcxI1To8sBKyXlJ')
-      .then((result) => {
-          setFormState('success');
-      }, (error) => {
-          console.log(error.text);
+      .then(() => setState('success'))
+      .catch((error) => {
+          console.error(error.text);
           alert("There was an error submitting your application.");
-          setFormState('idle');
+          setState('idle');
       });
     
+    
+
   };
 
+  if (state === 'success') {
+    return (
+      <section className="py-24 bg-black text-white text-center px-6">
+        <div className="max-w-xl mx-auto">
+          <h2 className="text-4xl font-black tracking-tighter mb-4">APPLICATION RECEIVED</h2>
+          <p className="text-gray-400 mb-8">Our casting directors review submissions every Tuesday and Thursday. If you fit a current brief, we will contact you via email.</p>
+          <button onClick={() => setState('idle')} className="text-xs font-bold uppercase border-b border-white pb-1">Submit Another</button>
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section id="apply" className="py-24 bg-white">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-           <span className={`text-xs font-bold uppercase tracking-widest ${BRAND.colors.gold}`}>Join The Agency</span>
-           <h2 className="font-serif text-3xl md:text-5xl mt-3 text-black">Be Discovered</h2>
-           <p className="mt-4 text-gray-500 font-light">
-             Apply now for representation in fashion modeling or casting consideration for upcoming reality TV projects.
-           </p>
-        </div>
-
-        <div className="bg-zinc-50 p-8 md:p-12 shadow-sm border border-zinc-100">
-          {formState === 'success' ? (
-            <div className="text-center py-12">
-              <div className="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
-                <CheckCircle className="h-8 w-8 text-green-600" />
-              </div>
-              <h3 className="text-2xl font-serif text-gray-900 mb-2">Application Received</h3>
-              <p className="text-gray-500 mb-6">Thank you for submitting to Luxieria. Our casting directors will review your profile and contact you via Email if there is a fit.</p>
-              <button 
-                onClick={() => setFormState('idle')}
-                className="text-xs uppercase font-bold tracking-widest text-black border-b border-black pb-1 hover:text-yellow-600 hover:border-yellow-600"
-              >
-                Submit another application
-              </button>
+    <section id="apply" className="grid grid-cols-1 lg:grid-cols-2 min-h-screen">
+      <div className="bg-zinc-100 p-12 lg:p-24 flex flex-col justify-center">
+        <span className="text-xs font-bold uppercase tracking-widest mb-4 text-gray-500">Be Discovered</span>
+        <h2 className="text-5xl md:text-7xl font-black tracking-tighter mb-8 leading-none">JOIN THE<br/>AGENCY.</h2>
+        <p className="text-gray-600 font-medium max-w-md mb-12 leading-relaxed">We are currently accepting applications for the 2026 roster. We are looking for unique faces for Commercial, Swim, and Reality TV. No prior experience required.</p>
+        <div className="flex gap-4 items-center text-sm font-bold"><div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>Status: SCOUTING OPEN</div>
+      </div>
+      <div className="bg-white p-12 lg:p-24 border-l border-gray-100 flex flex-col justify-center">
+        <form ref={form} onSubmit={handleSubmit} className="space-y-8 max-w-md w-full mx-auto">
+          <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">First Name</label>
+              <input required name="user_name" type="text" className="w-full border-b border-gray-300 py-2 focus:border-black focus:outline-none transition-colors" />
             </div>
-          ) : (
-            <form ref={form} onSubmit={handleSubmit} className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-xs uppercase tracking-widest text-gray-500 mb-2">Full Name</label>
-                  <input name="user_name" required type="text" className="w-full bg-white border border-gray-200 p-3 text-sm focus:outline-none focus:border-yellow-600 transition-colors" placeholder="e.g. Jane Doe" />
-                </div>
-                <div>
-                  <label className="block text-xs uppercase tracking-widest text-gray-500 mb-2">Email Address</label>
-                  <input name="user_email" required type="email" className="w-full bg-white border border-gray-200 p-3 text-sm focus:outline-none focus:border-yellow-600 transition-colors" placeholder="jane@example.com" />
-                </div>
-                <div>
-                  <label className="block text-xs uppercase tracking-widest text-gray-500 mb-2">Instagram Handle</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-3 text-gray-400">@</span>
-                    <input name="instagram_handle" required type="text" className="w-full bg-white border border-gray-200 p-3 pl-8 text-sm focus:outline-none focus:border-yellow-600 transition-colors" placeholder="luxieriastyle" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs uppercase tracking-widest text-gray-500 mb-2">TikTok Profile</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-3 text-gray-400">@</span>
-                    <input name="tiktok_handle" type="text" className="w-full bg-white border border-gray-200 p-3 pl-8 text-sm focus:outline-none focus:border-yellow-600 transition-colors" placeholder="luxieriastyle" />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs uppercase tracking-widest text-gray-500 mb-2">Date of Birth</label>
-                  <input name="dob" required type="date" className="w-full bg-white border border-gray-200 p-3 text-sm focus:outline-none focus:border-yellow-600 transition-colors" />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs uppercase tracking-widest text-gray-500 mb-4">I am interested in (Select all that apply)</label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {['Fashion Modeling', 'Swimwear / Lingerie', 'Reality TV Casting', 'Influencer Representation'].map((opt) => (
-                    <label key={opt} className="flex items-center space-x-3 cursor-pointer group">
-                      <input name="interests" value={opt} type="checkbox" className="form-checkbox h-4 w-4 text-black border-gray-300 rounded focus:ring-yellow-600" />
-                      <span className="text-sm text-gray-700 group-hover:text-black">{opt}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs uppercase tracking-widest text-gray-500 mb-2">Experience / Bio</label>
-                <textarea name="message" rows="4" className="w-full bg-white border border-gray-200 p-3 text-sm focus:outline-none focus:border-yellow-600 transition-colors" placeholder="Tell us about yourself, previous work, or why you want to join Reality TV..."></textarea>
-              </div>
-
-              <div className="pt-4">
-                <button 
-                  type="submit" 
-                  disabled={formState === 'submitting'}
-                  className="w-full bg-black text-white py-4 uppercase tracking-widest text-xs font-bold hover:bg-zinc-800 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {formState === 'submitting' ? 'Submitting...' : 'Submit Application'}
-                </button>
-              </div>
-            </form>
-          )}
-        </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Last Name</label>
+              <input required type="text" className="w-full border-b border-gray-300 py-2 focus:border-black focus:outline-none transition-colors" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Email Address</label>
+            <input required name="user_email" type="email" className="w-full border-b border-gray-300 py-2 focus:border-black focus:outline-none transition-colors" />
+          </div>
+          <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Instagram</label>
+              <input required name="instagram_handle" type="text" placeholder="@" className="w-full border-b border-gray-300 py-2 focus:border-black focus:outline-none transition-colors" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">TikTok</label>
+              <input name="tiktok_handle" type="text" placeholder="@" className="w-full border-b border-gray-300 py-2 focus:border-black focus:outline-none transition-colors" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Date of Birth</label>
+            <input name="dob" required type="date" className="w-full border-b border-gray-300 py-2 focus:border-black focus:outline-none transition-colors" />
+          </div>
+          <div className="pt-8">
+            <button disabled={state === 'submitting'} className="w-full bg-black text-white h-16 text-xs font-bold uppercase tracking-widest hover:bg-zinc-800 transition-all flex justify-between px-8 items-center group">
+              {state === 'submitting' ? 'Processing...' : 'Submit Application'}
+              <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+            </button>
+          </div>
+        </form>
       </div>
     </section>
   );
 };
 
-const Footer = () => {
-  return (
-    <footer className="bg-black text-white pt-20 pb-10 border-t border-zinc-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-16">
-          <div className="col-span-1 md:col-span-2">
-            <h2 className="font-serif text-2xl tracking-widest font-bold text-white mb-6">
-              LUXIERIA<span className="text-yellow-600">.</span>
-            </h2>
-            <p className="text-gray-400 text-sm max-w-sm mb-6 leading-relaxed">
-              The premier destination for new face modeling and reality television casting. We bridge the gap between high fashion and pop culture.
-            </p>
-            {/* Social Icons Removed */}
-          </div>
-          
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-6">Agency</h4>
-            <ul className="space-y-4 text-sm text-gray-400">
-              <li><a href="#about" className="hover:text-white transition-colors">About Us</a></li>
-              <li><a href="#talent" className="hover:text-white transition-colors">Talent Board</a></li>
-              <li><a href="#services" className="hover:text-white transition-colors">Services</a></li>
-              <li><a href="#stories" className="hover:text-white transition-colors">Success Stories</a></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-6">Contact</h4>
-            <ul className="space-y-4 text-sm text-gray-400">
-              <li className="flex items-start">
-                <span className="text-yellow-600 mr-2">●</span> Miami, FL / Los Angeles, CA
-              </li>
-              <li className="flex items-start">
-                <span className="text-yellow-600 mr-2">●</span> Mon-Fri: 9am - 6pm
-              </li>
-            </ul>
-          </div>
-        </div>
-        
-        <div className="border-t border-zinc-900 pt-8 flex flex-col md:flex-row justify-between items-center text-xs text-gray-500">
-          <p>&copy; 2024 Luxieria Style. All rights reserved.</p>
-          <div className="flex space-x-6 mt-4 md:mt-0">
-            <a href="#" className="hover:text-white">Privacy Policy</a>
-            <a href="#" className="hover:text-white">Terms of Service</a>
-          </div>
+const Footer = () => (
+  <footer className="bg-black text-white py-20 px-6 border-t border-zinc-900">
+    <div className="max-w-[1800px] mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-12">
+      <div>
+        <h2 className="text-4xl font-black tracking-tighter mb-6">LUXIERIA.</h2>
+        <div className="flex flex-col gap-2 text-sm text-gray-500">
+          <p>Los Angeles • Miami • New York</p>
+          <p>casting@luxieriastyle.com</p>
         </div>
       </div>
-    </footer>
-  );
-};
+      <div className="flex gap-8 text-xs font-bold uppercase tracking-widest text-gray-500">
+        <a href="/portal" className="hover:text-white text-white">Talent Portal</a>
+      </div>
+    </div>
+  </footer>
+);
 
-const MainSite = ({ activeSection, scrollToSection, mobileMenuOpen, setMobileMenuOpen }) => (
+// --- MAIN APP WRAPPER ---
+
+const MainSite = ({ mobileMenuOpen, setMobileMenuOpen }) => (
   <>
-    <Navigation activeSection={activeSection} scrollToSection={scrollToSection} mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
+    <Navbar mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
     <main>
-      <Hero scrollToSection={scrollToSection} />
-      <About />
-      <Services />
-      <Talent />
-      <SuccessStories />
-      <ApplicationForm />
+      <Hero />
+      <AgencyMetrics />
+      <TalentBoard />
+      <Application />
     </main>
     <Footer />
   </>
 );
 
 const App = () => {
-  const [activeSection, setActiveSection] = useState('home');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isPortal, setIsPortal] = useState(false);
 
   useEffect(() => {
-    // Add Google Fonts
     const link = document.createElement('link');
-    link.href = 'https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap';
+    link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;900&family=Playfair+Display:wght@400;700&display=swap';
     link.rel = 'stylesheet';
     document.head.appendChild(link);
 
-    // Simple routing check
-    if (window.location.pathname === '/portal') {
-      setIsPortal(true);
-    }
-
+    if (window.location.pathname === '/portal') setIsPortal(true);
     return () => document.head.removeChild(link);
   }, []);
 
-  const scrollToSection = (id) => {
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
-      setActiveSection(id);
-    }
-  };
-
-  useEffect(() => {
-    if (isPortal) return;
-    const handleScroll = () => {
-      const sections = ['home', 'about', 'services', 'talent', 'stories', 'apply'];
-      const scrollPosition = window.scrollY + 200;
-      for (const section of sections) {
-        const element = document.getElementById(section);
-        if (element && element.offsetTop <= scrollPosition && (element.offsetTop + element.offsetHeight) > scrollPosition) {
-          setActiveSection(section);
-        }
-      }
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [isPortal]);
-
   return (
-    <div className="font-sans antialiased bg-white selection:bg-yellow-200 selection:text-black">
+    <div className="font-sans antialiased bg-white text-black">
       <style>{`
-        :root { --font-serif: 'Playfair Display', serif; --font-sans: 'Montserrat', sans-serif; }
-        .font-serif { font-family: var(--font-serif); } .font-sans { font-family: var(--font-sans); }
-        @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in-up { animation: fade-in-up 1s ease-out forwards; }
+        :root { --font-sans: 'Inter', sans-serif; --font-serif: 'Playfair Display', serif; }
+        .font-sans { font-family: var(--font-sans); }
+        .font-serif { font-family: var(--font-serif); }
+        
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .animate-marquee {
+          animation: marquee 20s linear infinite;
+        }
       `}</style>
       
-      {isPortal ? (
-        <CastingPortal />
-      ) : (
-        <MainSite 
-          activeSection={activeSection} 
-          scrollToSection={scrollToSection} 
-          mobileMenuOpen={mobileMenuOpen} 
-          setMobileMenuOpen={setMobileMenuOpen} 
-        />
-      )}
-      
-      {/* <Analytics /> */}
+      {isPortal ? <CastingPortal /> : <MainSite mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />}
+      {<Analytics />}
     </div>
   );
 };
