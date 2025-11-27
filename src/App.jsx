@@ -197,7 +197,7 @@ const CastingPortal = () => {
                 <div className="relative z-10 flex flex-col items-center">
                   <UploadCloud className="w-8 h-8 mb-3 group-hover:scale-110 transition-transform duration-300" />
                   <span className="text-sm font-black uppercase tracking-widest">Select Files to Upload</span>
-                  <span className="text-[10px] uppercase text-gray-500 mt-2">Images / Video • Max 50MB</span>
+                  <span className="text-[10px] uppercase text-gray-500 mt-2">Images 20MB Each / Video 2GB Each </span>
                 </div>
               </button>
               
