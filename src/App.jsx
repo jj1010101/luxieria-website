@@ -290,10 +290,10 @@ const AgencyMetrics = () => (
 
 const TalentBoard = () => {
   const models = [
-    { src: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=1964&auto=format&fit=crop", name: "ELENA R.", height: "5'10\"", cast: "Vogue Italia • Editorial" },
-    { src: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?q=80&w=1887&auto=format&fit=crop", name: "SIENNA M.", height: "5'9\"", cast: "Miami Swim Week • Oh Polly" },
-    { src: "https://images.unsplash.com/photo-1500917293891-ef795e70e1f6?q=80&w=2070&auto=format&fit=crop", name: "EMMA K.", height: "5'11\"", cast: "Jacquemus • Summer 2025" },
-    { src: "https://images.unsplash.com/photo-1616002411355-49593fd89721?q=80&w=1964&auto=format&fit=crop", name: "JASMINE C.", height: "5'8\"", cast: "Revolve • Global Campaign" }
+    { src: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=1964&auto=format&fit=crop", name: "ELENA", height: "5'10\"", cast: "Vogue Italia • Editorial" },
+    { src: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?q=80&w=1887&auto=format&fit=crop", name: "SIENNA", height: "5'9\"", cast: "Miami Swim Week • Oh Polly" },
+    { src: "https://images.unsplash.com/photo-1500917293891-ef795e70e1f6?q=80&w=2070&auto=format&fit=crop", name: "EMMA", height: "5'11\"", cast: "Jacquemus • Summer 2025" },
+    { src: "https://images.unsplash.com/photo-1616002411355-49593fd89721?q=80&w=1964&auto=format&fit=crop", name: "JASMINE", height: "5'8\"", cast: "Revolve • Global Campaign" }
   ];
   return (
     <section id="talent" className="border-b border-black bg-white">
