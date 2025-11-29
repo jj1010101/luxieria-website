@@ -375,7 +375,8 @@ const Application = () => {
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Last Name</label>
-              <input required name="last_name" type="text" className="w-full border-b border-gray-300 py-2 focus:border-black focus:outline-none transition-colors" />
+              <input required name="user_lastname" type="text" className="w-full border-b border-gray-300 py-2 focus:border-black focus:outline-none transition-colors" />
+
             </div>
           </div>
           <div className="space-y-2">
