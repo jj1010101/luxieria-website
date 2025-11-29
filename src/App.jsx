@@ -351,7 +351,7 @@ const Application = () => {
       <section className="py-24 bg-black text-white text-center px-6">
         <div className="max-w-xl mx-auto">
           <h2 className="text-4xl font-black tracking-tighter mb-4">APPLICATION RECEIVED</h2>
-          <p className="text-gray-400 mb-8">Our casting directors review submissions every Tuesday and Thursday. If you fit a current brief, we will contact you via email.</p>
+          <p className="text-gray-400 mb-8">If you fit a current campaign, we will contact you via email.</p>
           <button onClick={() => setState('idle')} className="text-xs font-bold uppercase border-b border-white pb-1">Submit Another</button>
         </div>
       </section>
